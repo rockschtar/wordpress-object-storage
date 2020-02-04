@@ -1,0 +1,22 @@
+{
+    "name": "rockschtar/wordpress-object-storage",
+    "description": "Transients in green",
+    "type": "wordpress-muplugin",
+    "require": {
+        "php": ">=7.1"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Stefan Helmer",
+            "email": "rockschtar@gmail.com"
+        }
+    ],
+
+    "autoload": {
+        "psr-4": {
+            "Rockschtar\\WordPress\\ObjectStorage\\": "src/",
+            "Rockschtar\\WordPress\\ObjectStorage\\Tests\\": "tests/"
+        }
+    }
+}
