@@ -18,5 +18,9 @@
             "Rockschtar\\WordPress\\ObjectStorage\\": "src/",
             "Rockschtar\\WordPress\\ObjectStorage\\Tests\\": "tests/"
         }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "7.5.*",
+        "brain/monkey": "^2.2"
     }
 }
