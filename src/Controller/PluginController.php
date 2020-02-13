@@ -27,7 +27,9 @@ class PluginController {
     }
 
     public function registerCron(): void {
-        wp_schedule_event(time(), 'hourly', 'rsos_delete_expired');
+        if(!wp_next_scheduled('rsos_delete_expired')) {
+            wp_schedule_event(time(), 'hourly', 'rsos_delete_expired');
+        }
     }
 
     public function unregisterCron(): void {
