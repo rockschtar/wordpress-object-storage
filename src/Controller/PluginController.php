@@ -10,6 +10,8 @@ class PluginController {
         add_action('rsos_delete_expired', array(&$this, 'deleteExpired'));
         add_action('admin_action_rsos_reschedule_cron', array(&$this, 'rescheduleCron'));
         add_action('admin_action_rsos_delete_expired', array(&$this, 'deleteExpired'));
+
+        BrowserController::init();
     }
 
     public static function &init() {

@@ -20,6 +20,7 @@
 
 define('RSOS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('RSOS_PLUGIN_FILE', __FILE__);
+define('RSOS_PLUGIN_URL', plugin_dir_url(__FILE__));
 
 if (file_exists(RSOS_PLUGIN_DIR . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php')) {
     require_once 'vendor/autoload.php';
