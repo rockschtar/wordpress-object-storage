@@ -1,7 +1,7 @@
 <?php
 /**
  * WordPress Object Storage
- * @package     Rockschtar\WordPress\ObjectStorage
+ * @package     Rockschtar\WordPress\ObjectStorageObject
  * @author      Stefan Helmer
  * @copyright   2020 Stefan Helmer
  * @license     MIT

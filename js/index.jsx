@@ -1,11 +1,23 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import superagent from 'superagent';
 
 
 class ObjectStorageBrowser extends React.Component {
 
     constructor(props) {
         super(props);
+        this.getList();
+    }
+
+    getList() {
+
+        superagent.get(ObjectStorageBrowserVariables.resturl + 'get').set('X-WP-Nonce', ObjectStorageBrowserVariables.nonce).then(res => {
+
+            console.log(res);
+
+        })
+
     }
 
 
