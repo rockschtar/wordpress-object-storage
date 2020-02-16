@@ -9,7 +9,7 @@ use Rockschtar\WordPress\ObjectStorage\Manager\ObjectStorageManager;
  * @return bool
  */
 function rsos_set_object(string $key, $value, $expiration = 0): bool {
-    return ObjectStorageManager::set($key, $value, $expiration);
+    return ObjectStorageManager::setValue($key, $value, $expiration);
 }
 
 /**
@@ -24,5 +24,5 @@ function rsos_delete_object(string $key) {
  * @return bool|mixed|void
  */
 function rsos_get_object(string $key) {
-    return ObjectStorageManager::get($key);
+    return ObjectStorageManager::getValue($key);
 }

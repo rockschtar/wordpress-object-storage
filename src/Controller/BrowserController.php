@@ -24,20 +24,68 @@ class BrowserController {
     }
 
     public function reqisterRoutes(): void {
-        register_rest_route('rsos/v1', '/get', array(
+        register_rest_route('rsos/v1', '/items', array(
             'methods' => 'GET',
             'callback' => static function (WP_REST_Request $request): WP_REST_Response {
                 $response = new WP_REST_Response();
 
                 rsos_set_object('my-object', ['a' => 1]);
+                rsos_set_object('my-object2', ['a' => 1], WEEK_IN_SECONDS);
 
-                $a = ObjectStorageManager::filter();
+
+                $a = ObjectStorageManager::getItems();
 
                 $response->set_data($a);
 
                 return $response;
             },
+            'args' => array(
+                'skip' => array(
+                    'validate_callback' => static function ($param, $request, $key) {
+
+
+                        return true;
+                    },
+                    'required' => false,
+                    'type' => 'integer',
+                    'sanitize_callback' => static function ($value, $request, $param) {
+                        return $param === 'true';
+                    },
+                ),
+                'take' => array(
+                    'validate_callback' => static function ($param, $request, $key) {
+
+
+                        return true;
+                    },
+                    'required' => false,
+                    'type' => 'integer',
+                    'sanitize_callback' => static function ($value, $request, $param) {
+                        return $param === 'true';
+                    },
+                ),
+            ),
         ));
+
+        register_rest_route('rsos/v1', '/delete', array(
+            'methods' => 'DELETE',
+            'callback' => static function (WP_REST_Request $request): WP_REST_Response {
+                $response = new WP_REST_Response();
+                ObjectStorageManager::delete($request->get_param('name'));
+                return $response;
+            },
+            'args' => array(
+                'name' => array(
+                    'validate_callback' => static function ($param, $request, $key) {
+                        return true;
+                    },
+                    'required' => false,
+                    'type' => 'integer',
+                    'sanitize_callback' => 'sanitize_text_field',
+                ),
+            ),
+        ));
+
     }
 
     public function enqueueScripts($hook): void {
@@ -61,23 +109,16 @@ class BrowserController {
     public function page(): void {
         ?>
         <div class="wrap">
-
             <div id="icon-options-general" class="icon32"></div>
-            <h1><?php esc_attr_e('Heading', 'WpAdminStyle'); ?></h1>
-
+            <h1><?php esc_attr_e('Object Storage', 'rsos'); ?></h1>
             <div id="poststuff">
 
                 <div id="post-body" class="metabox-holder columns-1">
 
-
                 </div>
-                <!-- #post-body .metabox-holder .columns-2 -->
-
                 <br class="clear">
             </div>
-            <!-- #poststuff -->
-
-        </div> <!-- .wrap -->
+        </div>
         <?php
     }
 

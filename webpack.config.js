@@ -9,6 +9,7 @@ let jsConfig = Object.assign({}, config, {
     ...defaultConfig,
     entry: {
         index: './js/index.jsx',
+        pagination : './js/pagination.jsx'
     },
     output: {
         path: path.resolve(__dirname, 'js/dist'),
