@@ -6,35 +6,120 @@ export default class Pagination extends React.Component {
     constructor(props) {
         super(props);
 
+
         this.state = {
-            totalPages: 0,
-            currentPage: 1
+            totalPages: this.props.totalPages,
+            currentPage: this.props.currentPage,
+            totalItems: this.props.totalItems
         };
+    }
+
+    componentDidUpdate() {
+
+
+        console.log('UPDATE');
+        console.log(this.props)
+    }
+
+    handleChange(e) {
+
+
+        if (this.props.onChange) {
+            this.props.onChange(e);
+        }
+    }
+
+    handleOnFirstPage(e) {
+        if (this.props.onFirstPage) {
+            this.props.onFirstPage(e);
+        }
+
+    }
+
+    handleOnLastPage(e) {
+        if (this.props.onLastPage) {
+            this.props.onLastPage(e);
+        }
+    }
+
+    handleOnNextPage(e) {
+        if (this.props.onNextPage) {
+            this.props.onNextPage(e);
+        }
+    }
+
+    handleOnPreviousPage(e) {
+        if (this.props.onPreviousPage) {
+            this.props.onPreviousPage(e);
+        }
     }
 
     render() {
 
+        const {totalItems, totalPages, currentPage} = this.props;
+
+        let currentPageIsGreaterOne = currentPage > 1;
+        let currentPageIsOne = currentPage === 1;
+        let currentPageIsLast = currentPage === totalPages;
+        let currentPageIsSmallerLast = currentPage < totalPages;
 
         return (
             <div className="tablenav-pages">
-                <span className="displaying-num">3.150 Einträge</span>
+                <span className="displaying-num">{totalItems} Einträge</span>
                 <span className="pagination-links">
-                    <span className="tablenav-pages-navspan button disabled" aria-hidden="true">«</span>
-                    <span className="tablenav-pages-navspan button disabled" aria-hidden="true">‹</span>
+                     {currentPageIsGreaterOne ? (
+                         <a className="first-page button" href="#" onClick={(e) => this.handleOnFirstPage(e)}><span
+                             className="screen-reader-text">Erste Seite</span><span aria-hidden="true">«</span></a>
+                     ) : (
+                         <span className="tablenav-pages-navspan button disabled" aria-hidden="true">«</span>
+                     )}
+
+                    {currentPageIsOne ? (
+                        <span className="tablenav-pages-navspan button disabled" aria-hidden="true">‹</span>
+                    ) : (
+                        <a className="prev-page button" href="#" onClick={(e) => this.handleOnPreviousPage(e)}><span
+                            className="screen-reader-text">Vorherige Seite</span><span aria-hidden="true">‹</span></a>
+                    )}
+
                     <span className="paging-input">
                         <label htmlFor="current-page-selector" className="screen-reader-text">Aktuelle Seite</label>
-                        <input className="current-page" id="current-page-selector" type="text" name="paged" value="1" size="3" aria-describedby="table-paging" />
-                        <span className="tablenav-paging-text"> von <span className="total-pages">158</span></span>
-                    </span>
-                    <a className="next-page button" href="https://www.clubfans-united.de/wp/wp-admin/edit.php?paged=2">
-                        <span className="screen-reader-text">Nächste Seite</span>
-                        <span aria-hidden="true">›</span>
-                    </a>
-                    <a className="last-page button" href="https://www.clubfans-united.de/wp/wp-admin/edit.php?paged=158">
-                        <span className="screen-reader-text">Letzte Seite</span>
-                        <span aria-hidden="true">»</span>
-                    </a>
-                </span>
+                        <input className="current-page" id="current-page-selector" type="text" name="paged"
+                               value={currentPage} size="3" aria-describedby="table-paging"/>
+                        <span className="tablenav-paging-text"> von <span
+                            className="total-pages">{totalPages}</span></span>
+                        </span>
+
+
+                    {currentPageIsSmallerLast ? (
+
+                        <a className="next-page button"
+                           href="#" onClick={(e) => this.handleOnNextPage(e)}>
+                            <span className="screen-reader-text">Nächste Seite</span>
+                            <span aria-hidden="true">›</span>
+                        </a>
+
+                    ) : (
+                        <span className="tablenav-pages-navspan button disabled" aria-hidden="true">›</span>
+                    )}
+
+                    {currentPageIsLast ? (
+
+                        <span className="tablenav-pages-navspan button disabled" aria-hidden="true">»</span>
+
+                    ) : (
+
+                        <a className="last-page button" href="#" onClick={(e) => this.handleOnLastPage(e)}>
+                            <span className="screen-reader-text">Letzte Seite</span>
+                            <span aria-hidden="true">»</span>
+                        </a>
+
+
+                    )}
+
+
+
+
+                        </span>
             </div>
         )
     }

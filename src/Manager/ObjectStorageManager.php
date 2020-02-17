@@ -37,9 +37,9 @@ class ObjectStorageManager {
      * @return bool|mixed|void
      */
     public static function getValue(string $name) {
-        $expirationTimestamp = get_option(self::getExpirationKey($name));
+        $expirationTimestamp = (int)get_option(self::getExpirationKey($name));
 
-        if ($expirationTimestamp && $expirationTimestamp < time()) {
+        if (!empty($expirationTimestamp) && $expirationTimestamp < time()) {
             self::delete($name);
             return false;
         }
@@ -48,10 +48,9 @@ class ObjectStorageManager {
     }
 
     public static function get(string $name): ?ObjectItem {
+        $expirationTimestamp = (int)get_option(self::getExpirationKey($name));
 
-        $expirationTimestamp = get_option(self::getExpirationKey($name));
-
-        if ($expirationTimestamp && $expirationTimestamp < time()) {
+        if (!empty($expirationTimestamp) && $expirationTimestamp < time()) {
             self::delete($name);
             return null;
         }
@@ -112,20 +111,22 @@ class ObjectStorageManager {
         $sqlRecords = str_replace('###fields###', 'a.option_id, a.option_name, a.option_value, b.option_value AS expire_timestamp', $sqlBase) . " LIMIT {$take} OFFSET {$skip}";
         $records = $wpdb->get_results($wpdb->prepare($sqlRecords, $wpdb->esc_like('_rsos_') . '%', $wpdb->esc_like('_rsos_timeout_') . '%'));
 
-
-        $totalPages = ceil($totalRecords / $take);
-        $currentPage = $skip / $take;
+        $totalPages = $totalRecords === 0 ? 1 : ceil($totalRecords / $take);
+        $currentPage = $skip === 0 ? 1 : ceil($skip / $take) + 1;
 
         $objectItems = new ObjectItems();
+        $objectItems->setTotalPages($totalPages);
+        $objectItems->setTotalItems($totalRecords);
+        $objectItems->setCurrentPage($currentPage);
 
-        foreach($records as $record) {
+        foreach ($records as $record) {
             $objectItems->addItem(new ObjectItem(self::getName($record->option_name), $record->option_value, $record->expire_timestamp));
         }
 
         return $objectItems;
     }
 
-    public static function delAll() {
+    public static function deleteExpired(): void {
         global $wpdb;
 
         $wpdb->query(
@@ -133,8 +134,8 @@ class ObjectStorageManager {
                 "DELETE a, b FROM {$wpdb->options} a, {$wpdb->options} b
                         WHERE a.option_name LIKE %s
                         AND a.option_name NOT LIKE %s
-                        AND b.option_name = CONCAT( '_rsos_timeout_', SUBSTRING( a.option_name, 12 ) )
-                        AND b.option_value < %d", $wpdb->esc_like('_rsos_') . '%', $wpdb->esc_like('_rsos_timeout_') . '%', time())
+                        AND b.option_name = CONCAT( '_rsos_timeout_', SUBSTRING(a.option_name, 7))
+                        AND b.option_value < %d AND b.option_value > 0", $wpdb->esc_like('_rsos_') . '%', $wpdb->esc_like('_rsos_timeout_') . '%', time())
         );
     }
 }
