@@ -128,6 +128,17 @@ class ObjectStorageBrowser extends React.Component {
                     </tr>
                     </tfoot>
                 </table>
+                <div className="tablenav bottom">
+                    <Pagination
+                        totalItems={totalItems}
+                        totalPages={totalPages}
+                        currentPage={currentPage}
+                        onNextPage={(e) => this.handleOnNextPage(e)}
+                        onPreviousPage={(e) => this.handleOnPreviousPage(e)}
+                        onLastPage={(e) => this.handleOnLastPage(e)}
+                        onFirstPage={(e) => this.handleOnFirstPage(e)}
+                    />
+                </div>
             </div>
         );
     }

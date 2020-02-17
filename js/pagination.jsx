@@ -1,7 +1,7 @@
 import React from "react";
+import { __, sprintf, _n } from "@wordpress/i18n"
 
 export default class Pagination extends React.Component {
-
 
     constructor(props) {
         super(props);
@@ -63,13 +63,14 @@ export default class Pagination extends React.Component {
         let currentPageIsLast = currentPage === totalPages;
         let currentPageIsSmallerLast = currentPage < totalPages;
 
+
         return (
             <div className="tablenav-pages">
-                <span className="displaying-num">{totalItems} Einträge</span>
+                <span className="displaying-num">{sprintf(_n('One item', '%s items', totalItems, 'rs-object-storage'), totalItems)}</span>
                 <span className="pagination-links">
                      {currentPageIsGreaterOne ? (
                          <a className="first-page button" href="#" onClick={(e) => this.handleOnFirstPage(e)}><span
-                             className="screen-reader-text">Erste Seite</span><span aria-hidden="true">«</span></a>
+                             className="screen-reader-text">{ __('First page', 'rs-object-storage')}</span><span aria-hidden="true">«</span></a>
                      ) : (
                          <span className="tablenav-pages-navspan button disabled" aria-hidden="true">«</span>
                      )}
@@ -78,16 +79,17 @@ export default class Pagination extends React.Component {
                         <span className="tablenav-pages-navspan button disabled" aria-hidden="true">‹</span>
                     ) : (
                         <a className="prev-page button" href="#" onClick={(e) => this.handleOnPreviousPage(e)}><span
-                            className="screen-reader-text">Vorherige Seite</span><span aria-hidden="true">‹</span></a>
+                            className="screen-reader-text">{__('Previous page', 'rs-object-storage')}</span><span aria-hidden="true">‹</span></a>
                     )}
 
                     <span className="paging-input">
-                        <label htmlFor="current-page-selector" className="screen-reader-text">Aktuelle Seite</label>
+                        <label htmlFor="current-page-selector" className="screen-reader-text">{__('Current Page', 'rs-object-storage')}</label>
                         <input className="current-page" id="current-page-selector" type="text" name="paged"
                                value={currentPage} size="3" aria-describedby="table-paging"/>
-                        <span className="tablenav-paging-text"> von <span
-                            className="total-pages">{totalPages}</span></span>
-                        </span>
+
+                        <span className="tablenav-paging-text"> von <span className="total-pages">{totalPages}</span></span>
+
+                    </span>
 
 
                     {currentPageIsSmallerLast ? (
