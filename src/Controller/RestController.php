@@ -34,8 +34,6 @@ class RestController {
                 $orderBy = $request->get_param('orderBy');
                 $order = $request->get_param('order');
 
-                $orderBy = 'expireTimestamp';
-
                 $objectItems = ObjectStorageManager::getItems($skip, $take, $orderBy, $order);
                 $response->set_data($objectItems);
 
@@ -60,6 +58,42 @@ class RestController {
                     'type' => 'integer',
                     'sanitize_callback' => static function ($value, $request, $param) {
                         return filter_var($value, FILTER_SANITIZE_NUMBER_INT);
+                    },
+                ),
+                'orderBy' => array(
+                    'validate_callback' => static function ($param, $request, $key) {
+
+                        $orderByValues = ['name', 'expireTimestamp'];
+
+                        return in_array($param, $orderByValues, true);
+                    },
+                    'required' => false,
+                    'type' => 'integer',
+                    'sanitize_callback' => static function ($value, $request, $param) {
+                        return filter_var($value, FILTER_SANITIZE_STRING);
+                    },
+                ),
+                'order' => array(
+                    'validate_callback' => static function ($param, $request, $key) {
+
+                        if(empty($param)) {
+                            return true;
+                        }
+
+                        $orderByValues = ['asc', 'desc'];
+
+                        return in_array($param, $orderByValues, true);
+
+                    },
+                    'required' => false,
+                    'type' => 'integer',
+                    'sanitize_callback' => static function ($value, $request, $param) {
+
+                        if(empty($value)) {
+                            return null;
+                        }
+
+                        return filter_var($value, FILTER_SANITIZE_STRING);
                     },
                 ),
             ),

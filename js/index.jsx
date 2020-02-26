@@ -10,7 +10,6 @@ import * as moment from "moment/moment"
 import {German} from "flatpickr/dist/l10n/de.js"
 import {Spanish} from "flatpickr/dist/l10n/es.js"
 
-
 class ObjectStorageBrowser extends React.Component {
 
     constructor(props) {
@@ -24,7 +23,7 @@ class ObjectStorageBrowser extends React.Component {
         this.flatPickrOptions = {};
         this.flatPickrOptions.mindate = moment().add(30, 'm').toDate();
 
-        switch (ObjectStorageBrowserVariables.locale) {
+        switch (this.variables.locale) {
             case 'de':
                 this.flatPickrOptions.locale = German;
                 break;
@@ -33,6 +32,13 @@ class ObjectStorageBrowser extends React.Component {
                 break;
         }
 
+
+        this.order = (orderBy, order) => {
+            return {
+                orderBy: orderBy,
+                orderDirection: order
+            }
+        };
 
         this.state = {
             isLoading: true,
@@ -43,7 +49,11 @@ class ObjectStorageBrowser extends React.Component {
             totalItems: 0,
             currentPage: 1,
             editShow: false,
-            editItem: null
+            editItem: null,
+            orderTest : new this.order('name', 'asc'),
+            orderBy: 'name',
+            orderName: 'asc',
+            orderExpireTimestamp: 'asc'
         };
     }
 
@@ -128,13 +138,41 @@ class ObjectStorageBrowser extends React.Component {
         }
     };
 
+    async order(order) {
+
+
+
+
+        await this.setState({orderTest: order});
+
+        this.load(this.state.currentSkip, this.state.take);
+    }
+
+    getOrderDirection() {
+
+        switch(this.state.order) {
+            case 'name':
+                return this.state.orderName;
+            case 'expireTimestamp':
+                return this.state.orderExpireTimestamp;
+        }
+
+        return null;
+
+    }
 
     load(skip, take) {
 
         this.setState({isLoading: true});
 
-        superagent.get(this.restUrl + 'items').query({skip: skip, take: take})
-            .set('X-WP-Nonce', this.variables.nonce).then(response => {
+        superagent.get(this.restUrl + 'items').query(
+            {
+                skip: skip,
+                take: take,
+                orderBy: this.state.orderTest.orderBy,
+                order: this.state.orderTest.order
+            }
+        ).set('X-WP-Nonce', this.variables.nonce).then(response => {
 
             this.setState({
                 isLoading: false,
@@ -298,9 +336,20 @@ class ObjectStorageBrowser extends React.Component {
                 <table className="widefat">
                     <thead>
                     <tr>
-                        <th className="row-title">{__('Name', 'rs-object-storage')}</th>
+                        <th className={"manage-column column-title column-primary sortable " + this.state.order}>
+                            <a href="#"
+                               onClick={() => this.order(new this.order('name', 'asc'))}><span>{__('Name', 'rs-object-storage')}</span><span
+                                className="sorting-indicator"></span></a>
+
+
+                        </th>
                         <th>{__('Value', 'rs-object-storage')}</th>
-                        <th>{__('Expires', 'rs-object-storage')}</th>
+                        <th className={"manage-column column-title column-primary sortable " + this.state.order}>
+
+                            <a href="#"
+                               onClick={() => this.order('expireTimestamp', this.state.order === 'asc' ? 'desc' : 'asc')}><span>{__('Expires', 'rs-object-storage')}</span><span
+                                className="sorting-indicator"></span></a>
+                           </th>
                     </tr>
                     </thead>
 
