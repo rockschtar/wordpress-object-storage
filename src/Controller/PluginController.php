@@ -20,7 +20,9 @@ class PluginController {
 
     public function createDummies(): void {
         for ($i = 0; $i < 201; $i++) {
-            rsos_set_object('dummy-' . $i, ['a' => uniqid('k', false)]);
+            $expire = random_int(0, MONTH_IN_SECONDS * 3);
+
+            rsos_set_object('dummy-' . $i, ['a' => uniqid('k', false)], $expire);
         }
     }
 

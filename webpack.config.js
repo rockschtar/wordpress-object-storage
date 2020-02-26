@@ -27,6 +27,22 @@ let jsConfig = Object.assign({}, config, {
                 use: [
                     {loader: 'babel-loader'}]
             },
+            {
+                test: /.css$/,
+                use: [
+                    {
+                        loader: 'file-loader',
+                        options: {name: '[name].css'}
+                    },
+
+                    {
+                        loader: 'extract-loader'
+                    },
+                    {
+                        loader: 'css-loader'
+                    }
+                ]
+            },
         ],
     },
 });

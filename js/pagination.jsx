@@ -1,5 +1,5 @@
 import React from "react";
-import { __, sprintf, _n } from "@wordpress/i18n"
+import {__, _n, sprintf} from "@wordpress/i18n"
 
 export default class Pagination extends React.Component {
 
@@ -16,9 +16,6 @@ export default class Pagination extends React.Component {
 
     componentDidUpdate() {
 
-
-        console.log('UPDATE');
-        console.log(this.props)
     }
 
     handleChange(e) {

@@ -84,6 +84,40 @@ class ObjectStorageManager {
         return $result;
     }
 
+    public static function updateName(string $oldName, string $newName): ObjectItem {
+        global $wpdb;
+        $oldKey = self::getKey($oldName);
+        $newKey = self::getKey($newName);
+
+        $oldExpirationKey = self::getExpirationKey($oldName);
+        $newExpirationKey = self::getExpirationKey($newName);
+
+        $wpdb->update($wpdb->options, ['option_name' => $newKey], ['option_name' => $oldKey], ['%s'], ['%s']);
+        $wpdb->update($wpdb->options, ['option_name' => $newExpirationKey], ['option_name' => $oldExpirationKey], ['%s'], ['%s']);
+
+        return self::get($newName);
+    }
+
+    public static function updateExpireTimestamp(string $name, int $expireTimestamp): ObjectItem {
+        global $wpdb;
+        $key = self::getExpirationKey($name);
+        update_option($key, $expireTimestamp);
+
+        return self::get($name);
+    }
+
+    /**
+     * @param string $name
+     * @param $value
+     * @param int $timestamp
+     * @return bool
+     */
+    public static function setValueWithTimestamp(string $name, $value, $timestamp = 0): bool {
+        $result = update_option(self::getKey($name), $value, false);
+        update_option(self::getExpirationKey($name), $timestamp, false);
+        return $result;
+    }
+
     /**
      * @param $key
      */
@@ -92,9 +126,8 @@ class ObjectStorageManager {
         delete_option(self::getExpirationKey($name));
     }
 
-    public static function getItems(int $skip = 0, int $take = 20): ObjectItems {
+    public static function getItems(int $skip = 0, int $take = 20, string $orderBy = null, $order = 'asc'): ObjectItems {
         global $wpdb;
-
 
         $sqlBase = "SELECT 
                         ###fields###
@@ -108,7 +141,19 @@ class ObjectStorageManager {
         $sqlCount = str_replace('###fields###', 'COUNT(*)', $sqlBase);
         $totalRecords = $wpdb->get_var($wpdb->prepare($sqlCount, $wpdb->esc_like('_rsos_') . '%', $wpdb->esc_like('_rsos_timeout_') . '%'));
 
-        $sqlRecords = str_replace('###fields###', 'a.option_id, a.option_name, a.option_value, b.option_value AS expire_timestamp', $sqlBase) . " LIMIT {$take} OFFSET {$skip}";
+        $orderDirection = $order === 'desc' ? 'desc' : 'asc';
+
+        switch ($orderBy) {
+            case 'expireTimestamp':
+                $orderByField = 'expire_timestamp';
+                break;
+            default:
+                $orderByField = 'a.option_name';
+        }
+
+        $orderByClause = "ORDER BY {$orderByField} {$orderDirection}";
+
+        $sqlRecords = str_replace('###fields###', 'a.option_id, a.option_name, a.option_value, b.option_value AS expire_timestamp', $sqlBase) . " {$orderByClause} LIMIT {$take} OFFSET {$skip}";
         $records = $wpdb->get_results($wpdb->prepare($sqlRecords, $wpdb->esc_like('_rsos_') . '%', $wpdb->esc_like('_rsos_timeout_') . '%'));
 
         $totalPages = $totalRecords === 0 ? 1 : ceil($totalRecords / $take);

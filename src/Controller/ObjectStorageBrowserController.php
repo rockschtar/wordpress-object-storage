@@ -21,11 +21,12 @@ class ObjectStorageBrowserController {
     public function enqueueScripts($hook): void {
         if ($hook === 'settings_page_object-storage-browser') {
             wp_enqueue_script('object-storage-browser', RSOS_PLUGIN_URL . 'js/dist/index.js', ['wp-i18n', 'react', 'react-dom']);
-
+            wp_enqueue_style('object-storage-browser', RSOS_PLUGIN_URL . 'js/dist/light.css');
             wp_localize_script(
                 'object-storage-browser',
                 'ObjectStorageBrowserVariables',
                 [
+                    'locale' => strtolower(explode('_', get_locale())[0]),
                     'resturl' => esc_url_raw(rest_url('rsos/v1/')),
                     'nonce' => wp_create_nonce('wp_rest')]
             );
