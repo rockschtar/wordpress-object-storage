@@ -8,8 +8,8 @@ let config = {
 let jsConfig = Object.assign({}, config, {
     ...defaultConfig,
     entry: {
-        index: './js/index.jsx',
-        pagination : './js/pagination.jsx'
+        ObjectStorageBrowser: './js/ObjectStorageBrowser.jsx',
+        Pagination: './js/Pagination.jsx'
     },
     output: {
         path: path.resolve(__dirname, 'js/dist'),

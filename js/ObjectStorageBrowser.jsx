@@ -1,14 +1,15 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import superagent from 'superagent'
-import Pagination from "./pagination";
+import Pagination from "./Pagination";
 import ReactModal from "react-modal";
 import {__, sprintf} from "@wordpress/i18n"
 import "flatpickr/dist/themes/light.css";
-import Flatpickr from "react-flatpickr";
 import * as moment from "moment/moment"
 import {German} from "flatpickr/dist/l10n/de.js"
 import {Spanish} from "flatpickr/dist/l10n/es.js"
+import "./ObjectStorageBrowser.css"
+
 
 class ObjectStorageBrowser extends React.Component {
 
@@ -16,9 +17,8 @@ class ObjectStorageBrowser extends React.Component {
 
         super(props);
 
+        // noinspection JSUnresolvedVariable
         this.variables = ObjectStorageBrowserVariables;
-        this.restUrl = ObjectStorageBrowserVariables.resturl;
-
 
         this.flatPickrOptions = {};
         this.flatPickrOptions.mindate = moment().add(30, 'm').toDate();
@@ -32,14 +32,6 @@ class ObjectStorageBrowser extends React.Component {
                 break;
         }
 
-
-        this.order = (orderBy, order) => {
-            return {
-                orderBy: orderBy,
-                orderDirection: order
-            }
-        };
-
         this.state = {
             isLoading: true,
             currentSkip: 0,
@@ -48,9 +40,6 @@ class ObjectStorageBrowser extends React.Component {
             totalPages: 0,
             totalItems: 0,
             currentPage: 1,
-            editShow: false,
-            editItem: null,
-            orderTest : new this.order('name', 'asc'),
             orderBy: 'name',
             orderName: 'asc',
             orderExpireTimestamp: 'asc'
@@ -61,116 +50,37 @@ class ObjectStorageBrowser extends React.Component {
         this.load(0, this.state.take);
     }
 
-
-    editModal() {
-
-        return {
-
-            handleOpen: (index, item) => {
-
-                let editItem = {};
-                editItem.original = item;
-                editItem.index = index;
-                editItem.name = item.name;
-                editItem.date = new Date(item.expireTimestamp * 1000);
-
-                this.setState({
-                    editItem: editItem,
-                    editShow: true
-                });
-
-            },
-            handleClose: () => {
-                this.setState({
-                    editItem: null,
-                    editShow: true
-                });
-            },
-            onChangeName: (event) => {
-
-                console.log(event);
-
-                let editItem = this.state.editItem;
-                editItem.name = event.target.value;
-
-                this.setState({
-                    editItem: editItem
-                });
-            },
-            onChangeExpires: (date) => {
-
-                let realDate = new Date(date);
-
-
-                let editItem = this.state.editItem;
-                editItem.date = realDate;
-                editItem.expireTimestamp = realDate.getTime() / 1000;
-
-                this.setState({
-                    editItem: editItem
-                });
-
-                console.log(realDate.toDateString());
-
-            },
-            getMinDate: () => {
-                return moment().add(30, 'm').toDate();
-            },
-            update: (editItem) => {
-
-                let params = {};
-
-                params.newName = editItem.name
-                params.name = editItem.original.name;
-                params.expireTimestamp = editItem.expireTimestamp;
-
-                superagent
-                    .post(this.restUrl + 'update')
-                    .send(params)
-                    .set('X-WP-Nonce', this.variables.nonce)
-                    .then(response => {
-
-                        //replace item
-
-                        console.log(response);
-                    });
-            }
-        }
-    };
-
-    async order(order) {
-
-
-
-
-        await this.setState({orderTest: order});
-
+    async orderExpireTimestamp(order) {
+        await this.setState({orderBy: 'expireTimestamp', orderExpireTimestamp: order});
         this.load(this.state.currentSkip, this.state.take);
     }
 
-    getOrderDirection() {
-
-        switch(this.state.order) {
-            case 'name':
-                return this.state.orderName;
-            case 'expireTimestamp':
-                return this.state.orderExpireTimestamp;
-        }
-
-        return null;
-
+    async orderName(order) {
+        await this.setState({orderBy: 'name', orderName: order});
+        this.load(this.state.currentSkip, this.state.take);
     }
 
     load(skip, take) {
 
         this.setState({isLoading: true});
 
-        superagent.get(this.restUrl + 'items').query(
+        let order = 'asc';
+
+        switch (this.state.orderBy) {
+            case 'name':
+                order = this.state.orderName;
+                break;
+            case 'expireTimestamp':
+                order = this.state.orderExpireTimestamp;
+                break;
+        }
+
+        superagent.get(this.variables.resturl + 'items').query(
             {
                 skip: skip,
                 take: take,
-                orderBy: this.state.orderTest.orderBy,
-                order: this.state.orderTest.order
+                orderBy: this.state.orderBy,
+                order: order
             }
         ).set('X-WP-Nonce', this.variables.nonce).then(response => {
 
@@ -186,7 +96,6 @@ class ObjectStorageBrowser extends React.Component {
         })
     }
 
-
     delete(name, e) {
 
         let skip = this.state.currentSkip + this.state.take;
@@ -194,7 +103,7 @@ class ObjectStorageBrowser extends React.Component {
         this.setState({isLoading: true});
 
         superagent
-            .delete(this.restUrl + 'delete')
+            .delete(this.variables.resturl + 'delete')
             .query({name: name})
             .then(response => {
 
@@ -207,7 +116,7 @@ class ObjectStorageBrowser extends React.Component {
                         this.setState({isLoading: false});
                     } else {
                         superagent
-                            .get(this.restUrl + 'items')
+                            .get(this.variables.resturl + 'items')
                             .query({skip: skip - 1, take: 1})
                             .set('X-WP-Nonce', this.variables.nonce)
                             .then(response => {
@@ -220,8 +129,6 @@ class ObjectStorageBrowser extends React.Component {
                                 }
                             });
                     }
-
-
                 }
             )
     }
@@ -249,79 +156,12 @@ class ObjectStorageBrowser extends React.Component {
         this.load(skip, this.state.take);
     }
 
-    onChangeEdit(event) {
-
-    }
-
     render() {
 
-        const {items, totalItems, totalPages, currentPage, isLoading, editShow, editItem} = this.state;
-
-
-        let minDate = this.editModal().getMinDate();
-
-        console.log(minDate);
-
-
-        const customStyles = {
-            content: {
-                top: '20%',
-                left: '50%',
-                right: 'auto',
-                bottom: 'auto',
-                marginRight: '-50%',
-                transform: 'translate(-50%, -50%)'
-            }
-        };
+        const {items, totalItems, totalPages, currentPage, isLoading} = this.state;
 
         return (
             <div>
-
-                <ReactModal
-                    isOpen={editShow}
-                    style={customStyles}
-                    onRequestClose={() => this.editModal().handleClose()}
-                    contentLabel="Minimal Modal Example">
-                    <table className="form-table">
-                        <tbody>
-                        <tr>
-                            <th>
-                                <label htmlFor="name">Name</label>
-                            </th>
-                            <td>
-                                <input name="name" type="text" className="regular-text"
-                                       defaultValue=""
-                                       onChange={(e) => this.editModal().onChangeName(e)}
-                                       value={editItem && editItem.name}/>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th>
-                                <label htmlFor="expireDate">Expires</label>
-                            </th>
-                            <td>
-                                <Flatpickr
-                                    data-enable-time
-                                    options={this.flatPickrOptions}
-                                    value={editItem && editItem.date}
-                                    onChange={date => {
-                                        this.editModal().onChangeExpires(date);
-                                    }}
-                                />
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
-
-                    <p className={"submit"}>
-                        <button className={"button-secondary"} onClick={() => this.editModal().handleClose()}>Close
-                        </button>
-                        &nbsp;&nbsp;&nbsp;
-                        <button className={"button-primary"} onClick={(e) => this.editModal().update(editItem)}>Update
-                        </button>
-                    </p>
-                </ReactModal>
-
                 <div className="tablenav top">
                     <Pagination
                         totalItems={totalItems}
@@ -333,26 +173,24 @@ class ObjectStorageBrowser extends React.Component {
                         onFirstPage={(e) => this.handleOnFirstPage(e)}
                     />
                 </div>
-                <table className="widefat">
+                <table className={"widefat " + (this.state.isLoading ? 'loading' : '')}>
                     <thead>
                     <tr>
-                        <th className={"manage-column column-title column-primary sortable " + this.state.order}>
-                            <a href="#"
-                               onClick={() => this.order(new this.order('name', 'asc'))}><span>{__('Name', 'rs-object-storage')}</span><span
-                                className="sorting-indicator"></span></a>
-
-
+                        <th className={"manage-column column-title column-primary sortable " + this.state.orderName}>
+                            <a href="#" onClick={() => this.orderName(this.state.orderName === 'asc' ? 'desc' : 'asc')}>
+                                <span>{__('Name', 'rs-object-storage')}</span>
+                                <span className="sorting-indicator"/>
+                            </a>
                         </th>
                         <th>{__('Value', 'rs-object-storage')}</th>
-                        <th className={"manage-column column-title column-primary sortable " + this.state.order}>
-
+                        <th className={"manage-column column-title column-primary sortable " + this.state.orderExpireTimestamp}>
                             <a href="#"
-                               onClick={() => this.order('expireTimestamp', this.state.order === 'asc' ? 'desc' : 'asc')}><span>{__('Expires', 'rs-object-storage')}</span><span
-                                className="sorting-indicator"></span></a>
-                           </th>
+                               onClick={() => this.orderExpireTimestamp(this.state.orderExpireTimestamp === 'asc' ? 'desc' : 'asc')}>
+                                <span>{__('Expires', 'rs-object-storage')}</span>
+                                <span className="sorting-indicator"/></a>
+                        </th>
                     </tr>
                     </thead>
-
                     <tbody>
                     {items.length === 0 && !isLoading && (
                         <tr colspan="4" align="center">{__('No Items found.')}</tr>
@@ -380,9 +218,19 @@ class ObjectStorageBrowser extends React.Component {
                     </tbody>
                     <tfoot>
                     <tr>
-                        <th className="row-title">Name</th>
-                        <th>Value</th>
-                        <th>Expires</th>
+                        <th className={"manage-column column-title column-primary sortable " + this.state.orderName}>
+                            <a href="#" onClick={() => this.orderName(this.state.orderName === 'asc' ? 'desc' : 'asc')}>
+                                <span>{__('Name', 'rs-object-storage')}</span>
+                                <span className="sorting-indicator"/>
+                            </a>
+                        </th>
+                        <th>{__('Value', 'rs-object-storage')}</th>
+                        <th className={"manage-column column-title column-primary sortable " + this.state.orderExpireTimestamp}>
+                            <a href="#"
+                               onClick={() => this.orderExpireTimestamp(this.state.orderExpireTimestamp === 'asc' ? 'desc' : 'asc')}>
+                                <span>{__('Expires', 'rs-object-storage')}</span>
+                                <span className="sorting-indicator"/></a>
+                        </th>
                     </tr>
                     </tfoot>
                 </table>

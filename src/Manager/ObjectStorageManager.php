@@ -31,7 +31,6 @@ class ObjectStorageManager {
 
     }
 
-
     /**
      * @param string $name
      * @return bool|mixed|void
@@ -55,14 +54,17 @@ class ObjectStorageManager {
             return null;
         }
 
-        if(empty($expirationTimestamp)) {
+        if (empty($expirationTimestamp)) {
             $expirationTimestamp = null;
         }
 
         $value = get_option(self::getKey($name));
 
-        return new ObjectItem($name, $value, $expirationTimestamp);
+        if (!$value) {
+            return null;
+        }
 
+        return new ObjectItem($name, $value, $expirationTimestamp);
     }
 
     /**
@@ -85,6 +87,12 @@ class ObjectStorageManager {
     }
 
     public static function updateName(string $oldName, string $newName): ObjectItem {
+        $objectItem = self::get($newName);
+
+        if ($objectItem !== null) {
+            throw new \RuntimeException('Item Already exists');
+        }
+
         global $wpdb;
         $oldKey = self::getKey($oldName);
         $newKey = self::getKey($newName);
@@ -95,6 +103,8 @@ class ObjectStorageManager {
         $wpdb->update($wpdb->options, ['option_name' => $newKey], ['option_name' => $oldKey], ['%s'], ['%s']);
         $wpdb->update($wpdb->options, ['option_name' => $newExpirationKey], ['option_name' => $oldExpirationKey], ['%s'], ['%s']);
 
+        wp_cache_delete('notoptions', 'options');
+
         return self::get($newName);
     }
 
@@ -102,6 +112,8 @@ class ObjectStorageManager {
         global $wpdb;
         $key = self::getExpirationKey($name);
         update_option($key, $expireTimestamp);
+
+        wp_cache_delete('notoptions', 'options');
 
         return self::get($name);
     }

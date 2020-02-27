@@ -20,8 +20,10 @@ class ObjectStorageBrowserController {
 
     public function enqueueScripts($hook): void {
         if ($hook === 'settings_page_object-storage-browser') {
-            wp_enqueue_script('object-storage-browser', RSOS_PLUGIN_URL . 'js/dist/index.js', ['wp-i18n', 'react', 'react-dom']);
-            wp_enqueue_style('object-storage-browser', RSOS_PLUGIN_URL . 'js/dist/light.css');
+            wp_enqueue_script('object-storage-browser', RSOS_PLUGIN_URL . 'js/dist/ObjectStorageBrowser.js', ['wp-i18n', 'react', 'react-dom']);
+            wp_enqueue_style('object-storage-browser-flatpickr', RSOS_PLUGIN_URL . 'js/dist/light.css');
+            wp_enqueue_style('object-storage-browser', RSOS_PLUGIN_URL . 'js/dist/ObjectStorageBrowser.css');
+
             wp_localize_script(
                 'object-storage-browser',
                 'ObjectStorageBrowserVariables',
