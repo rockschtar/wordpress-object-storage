@@ -87,32 +87,22 @@ export default class Pagination extends React.Component {
                         <span className="tablenav-paging-text"> von <span className="total-pages">{totalPages}</span></span>
 
                     </span>
-
-
                     {currentPageIsSmallerLast ? (
-
                         <a className="next-page button"
                            href="#" onClick={(e) => this.handleOnNextPage(e)}>
                             <span className="screen-reader-text">Nächste Seite</span>
                             <span aria-hidden="true">›</span>
                         </a>
-
                     ) : (
                         <span className="tablenav-pages-navspan button disabled" aria-hidden="true">›</span>
                     )}
-
                     {currentPageIsLast ? (
-
                         <span className="tablenav-pages-navspan button disabled" aria-hidden="true">»</span>
-
                     ) : (
-
                         <a className="last-page button" href="#" onClick={(e) => this.handleOnLastPage(e)}>
                             <span className="screen-reader-text">Letzte Seite</span>
                             <span aria-hidden="true">»</span>
                         </a>
-
-
                     )}
 
 
