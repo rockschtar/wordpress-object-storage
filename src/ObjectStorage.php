@@ -2,6 +2,8 @@
 
 namespace Rockschtar\WordPress\ObjectStorage;
 
+use Rockschtar\WordPress\ObjectStorage\Models\ObjectStorageItem;
+
 class ObjectStorage {
 
     /**
@@ -20,13 +22,11 @@ class ObjectStorage {
         return '_rsos_' . $key;
     }
 
-
     /**
      * @param string $key
      * @return bool|mixed|void
      */
     public static function get(string $key) {
-
         $expirationTimestamp = get_option(self::getExpirationKey($key));
 
         if ($expirationTimestamp && $expirationTimestamp < time()) {
@@ -35,6 +35,15 @@ class ObjectStorage {
         }
 
         return get_option(self::getKey($key));
+    }
+
+    public static function getItem(string $key): ObjectStorageItem {
+        $objectStorageItem = new ObjectStorageItem($key);
+
+        $objectStorageItem->setValue(self::get($key));
+        $objectStorageItem->setExpiresAtDateTime(self::expiresAsDateTime($key));
+        $objectStorageItem->setExpiresAtTimestamp(self::expires($key));
+        return $objectStorageItem;
     }
 
     /**
@@ -62,8 +71,27 @@ class ObjectStorage {
         delete_option(self::getExpirationKey($key));
     }
 
-    public static function delAll() {
+    public static function expires($key): ?int {
+        $value = get_option(self::getExpirationKey($key));
 
+        if (!$value) {
+            return null;
+        }
+
+        return (int)$value;
+    }
+
+    public static function expiresAsDateTime($key): ?\DateTime {
+        $timestamp = self::expires($key);
+
+        if ($timestamp === null) {
+            return null;
+        }
+
+        return (new \DateTime())->setTimezone(wp_timezone())->setTimestamp($timestamp);
+    }
+
+    public static function delAll() {
         global $wpdb;
 
         $wpdb->query(
