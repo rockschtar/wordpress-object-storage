@@ -51,7 +51,7 @@ class ObjectStorageItem {
     /**
      * @return mixed|null
      */
-    public function getValue(): ?mixed {
+    public function getValue(): {
         return $this->value;
     }
 
@@ -59,7 +59,7 @@ class ObjectStorageItem {
      * @param mixed|null $value
      * @return ObjectStorageItem
      */
-    public function setValue(?mixed $value): ObjectStorageItem {
+    public function setValue($value): ObjectStorageItem {
         $this->value = $value;
         return $this;
     }
