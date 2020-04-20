@@ -51,7 +51,7 @@ class ObjectStorageItem {
     /**
      * @return mixed|null
      */
-    public function getValue(): {
+    public function getValue() {
         return $this->value;
     }
 
