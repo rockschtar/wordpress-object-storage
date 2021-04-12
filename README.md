@@ -19,15 +19,9 @@ then it will be serialized before it is set. Developed for usage  with composer 
 composer require rockschtar/wordpress-object-storage
 ```
 
-## License
-
-rockschtar/wordpress-object-storage is open source and released under MIT
-license. See [LICENSE.md](LICENSE.md) file for more info.
-
 ## Usage
 
 ### Set Object
-**php**
 ```php
 //without expiration time
 rsos_set_object('my-key', 'my-value');
@@ -37,14 +31,16 @@ rsos_set_object('my-key', 'my-value', 60 * 60 * 24);
 ```
 
 ### Get Object
-**php**
 ```php
 $myKey = rsos_get_object('my-key');
 ```
 
 ### Delete Object
-**php**
 ```php
 $myKey = rsos_delete_object('my-key');
 ```
+
+## License
+rockschtar/wordpress-object-storage is open source and released under MIT
+license. See [LICENSE.md](LICENSE.md) file for more info.
 
