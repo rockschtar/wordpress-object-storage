@@ -5,15 +5,17 @@ namespace Rockschtar\WordPress\ObjectStorage\Controller;
 class PluginController {
 
     private function __construct() {
-        register_activation_hook(RSOS_PLUGIN_FILE, array(&$this, 'registerCron'));
-        register_deactivation_hook(RSOS_PLUGIN_FILE, array(&$this, 'unregisterCron'));
-        add_action('rsos_delete_expired', array(&$this, 'deleteExpired'));
-        add_action('admin_action_rsos_reschedule_cron', array(&$this, 'rescheduleCron'));
-        add_action('admin_action_rsos_delete_expired', array(&$this, 'deleteExpired'));
+        register_activation_hook(RSOS_PLUGIN_FILE, $this->registerCron(...));
+        register_deactivation_hook(RSOS_PLUGIN_FILE, $this->unregisterCron(...));
+        add_action('rsos_delete_expired', $this->deleteExpired(...));
+        add_action('admin_action_rsos_reschedule_cron', $this->rescheduleCron(...));
+        add_action('admin_action_rsos_delete_expired', $this->deleteExpired(...));
     }
 
-    public static function &init() {
+    public static function &init(): PluginController
+    {
         static $instance = false;
+
         if (!$instance) {
             $instance = new self();
         }
@@ -21,22 +23,22 @@ class PluginController {
         return $instance;
     }
 
-    public function rescheduleCron(): void {
+    private function rescheduleCron(): void {
         $this->unregisterCron();
         $this->registerCron();
     }
 
-    public function registerCron(): void {
+    private function registerCron(): void {
         if(!wp_next_scheduled('rsos_delete_expired')) {
             wp_schedule_event(time(), 'hourly', 'rsos_delete_expired');
         }
     }
 
-    public function unregisterCron(): void {
+    private function unregisterCron(): void {
         wp_unschedule_event(time(), 'hourly', 'rsos_delete_expired');
     }
 
-    public function deleteExpired(): void {
+    private function deleteExpired(): void {
 
         global $wpdb;
 

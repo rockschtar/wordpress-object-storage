@@ -2,77 +2,67 @@
 
 namespace Rockschtar\WordPress\ObjectStorage;
 
+use DateTime;
 use Rockschtar\WordPress\ObjectStorage\Models\ObjectStorageItem;
 
 class ObjectStorage {
 
     /**
-     * @param string $key
-     * @return string
+     * @return false|mixed
      */
-    private static function getExpirationKey(string $key): string {
-        return '_rsos_timeout_' . $key;
-    }
-
-    /**
-     * @param string $key
-     * @return string
-     */
-    private static function getKey(string $key): string {
-        return '_rsos_' . $key;
-    }
-
-    /**
-     * @param string $key
-     * @return bool|mixed|void
-     */
-    public static function get(string $key) {
-        $expirationTimestamp = get_option(self::getExpirationKey($key));
+    public function get(string $key): mixed
+    {
+        $expirationTimestamp = get_option($this->getExpirationKey($key));
 
         if ($expirationTimestamp && $expirationTimestamp < time()) {
-            self::delete($key);
+            $this->delete($key);
             return false;
         }
 
-        return get_option(self::getKey($key));
+        return get_option($this->getKey($key));
     }
 
-    public static function getItem(string $key): ObjectStorageItem {
-        $objectStorageItem = new ObjectStorageItem($key);
-
-        $objectStorageItem->setValue(self::get($key));
-        $objectStorageItem->setExpiresAtDateTime(self::expiresAsDateTime($key));
-        $objectStorageItem->setExpiresAtTimestamp(self::expires($key));
-        return $objectStorageItem;
+    public function getItem(string $key): ObjectStorageItem {
+        $value = $this->get($key);
+        $expirationTimestamp = $this->expires($key);
+        return new ObjectStorageItem($key, $value, $expirationTimestamp);
     }
 
     /**
      * @param string $key
-     * @param $value
+     * @param mixed $value
      * @param int $expiration Optional. Time until expiration in seconds. Default 0 (no expiration).
      * @return bool
      */
-    public static function set(string $key, $value, $expiration = 0): bool {
-        $result = update_option(self::getKey($key), $value, false);
+    public function set(string $key, mixed $value, int $expiration = 0): bool {
+        $result = update_option($this->getKey($key), $value, false);
 
         if ($expiration > 0) {
             $timestampExpiration = time() + $expiration;
-            update_option(self::getExpirationKey($key), $timestampExpiration, false);
+            update_option($this->getExpirationKey($key), $timestampExpiration, false);
+        }
+
+        if($expiration === 0) {
+            delete_option($this->getExpirationKey($key));
+        }
+
+        if($expiration < 0) {
+            $this->delete($key);
         }
 
         return $result;
     }
+    
+    public function delete($key): bool {
+        if(delete_option($this->getKey($key)) === true) {
+            return  delete_option($this->getExpirationKey($key));
+        }
 
-    /**
-     * @param $key
-     */
-    public static function delete($key): void {
-        delete_option(self::getKey($key));
-        delete_option(self::getExpirationKey($key));
+        return false;
     }
 
-    public static function expires($key): ?int {
-        $value = get_option(self::getExpirationKey($key));
+    public  function expires($key): ?int {
+        $value = get_option($this->getExpirationKey($key));
 
         if (!$value) {
             return null;
@@ -81,17 +71,17 @@ class ObjectStorage {
         return (int)$value;
     }
 
-    public static function expiresAsDateTime($key): ?\DateTime {
-        $timestamp = self::expires($key);
+    public function expiresAsDateTime($key): ?DateTime {
+        $timestamp = $this->expires($key);
 
         if ($timestamp === null) {
             return null;
         }
 
-        return (new \DateTime())->setTimezone(wp_timezone())->setTimestamp($timestamp);
+        return new DateTime()->setTimezone(wp_timezone())->setTimestamp($timestamp);
     }
 
-    public static function delAll() {
+    public function clear() : void{
         global $wpdb;
 
         $wpdb->query(
@@ -102,5 +92,13 @@ class ObjectStorage {
                         AND b.option_name = CONCAT( '_rsos_timeout_', SUBSTRING( a.option_name, 12 ) )
                         AND b.option_value < %d", $wpdb->esc_like('_rsos_') . '%', $wpdb->esc_like('_rsos_timeout_') . '%', time())
         );
+    }
+
+    private function getExpirationKey(string $key): string {
+        return '_rsos_timeout_' . $key;
+    }
+
+    private function getKey(string $key): string {
+        return '_rsos_' . $key;
     }
 }

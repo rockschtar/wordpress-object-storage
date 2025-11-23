@@ -9,23 +9,25 @@
  * Plugin Name:  WordPress Object Storage
  * Plugin URI:   https://eracer.de
  * Description:  Transients in green
- * Version:      1.0.0
- * Requires PHP: 7.1
- * Requires at least: 5.2
+ * Version:      develop
+ * Requires PHP: 8.3
+ * Requires at least: 6.8
  * Author: Stefan Helmer
  * Author URI: https://eracer.de
  * License: MIT License
  * License URI: https://tldrlegal.com/license/mit-license
  **/
 
+use Rockschtar\WordPress\ObjectStorage\Controller\PluginController;
+
 define('RSOS_PLUGIN_DIR', plugin_dir_path(__FILE__));
-define('RSOS_PLUGIN_FILE', __FILE__);
+const RSOS_PLUGIN_FILE = __FILE__;
 
 if (file_exists(RSOS_PLUGIN_DIR . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php')) {
     require_once 'vendor/autoload.php';
 }
 
-\Rockschtar\WordPress\ObjectStorage\Controller\PluginController::init();
+PluginController::init();
 
 require_once 'functions.php';
 
