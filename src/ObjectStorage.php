@@ -78,7 +78,8 @@ class ObjectStorage {
             return null;
         }
 
-        return new DateTime()->setTimezone(wp_timezone())->setTimestamp($timestamp);
+        // Wrap DateTime instantiation in parentheses to avoid parser errors on some PHP versions
+        return (new DateTime())->setTimezone(wp_timezone())->setTimestamp($timestamp);
     }
 
     public function clear() : void{
