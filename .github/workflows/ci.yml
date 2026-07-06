@@ -1,0 +1,103 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+    # Releases are cut from plain semver tags (1.2.3, no v prefix).
+    tags: ['[0-9]+.[0-9]+.[0-9]+']
+  pull_request:
+
+jobs:
+  cs:
+    name: Code style (PER-CS 3.0)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+
+      - run: composer install --no-interaction --no-progress
+
+      - run: composer cs:check
+
+  test:
+    name: PHPUnit (PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.3', '8.4']
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: wordpress_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '${{ matrix.php }}'
+          extensions: mysqli
+          coverage: none
+
+      # The install script exports the test suite from develop.svn.wordpress.org;
+      # svn is no longer preinstalled on GitHub runners.
+      - name: Install subversion
+        run: sudo apt-get update && sudo apt-get install -y subversion
+
+      - run: composer install --no-interaction --no-progress
+
+      - name: Install WordPress test suite
+        run: bash bin/install-wp-tests.sh wordpress_test root root 127.0.0.1:3306 latest true
+
+      - run: vendor/bin/phpunit
+
+  release:
+    name: Release
+    if: github.ref_type == 'tag'
+    needs: [cs, test]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+
+      # git archive honors the export-ignore rules in .gitattributes, so the
+      # zip only contains runtime files. The composer install afterwards adds
+      # vendor/autoload.php, without which the plugin cannot load its classes
+      # when installed standalone (outside a composer project).
+      - name: Build distribution zip
+        run: |
+          mkdir -p build
+          git archive --prefix=wordpress-object-storage/ HEAD | tar -x -C build
+          composer install --no-dev --optimize-autoloader --no-interaction --no-progress \
+            --working-dir=build/wordpress-object-storage
+          rm -f build/wordpress-object-storage/composer.lock
+          cd build
+          zip -rq "wordpress-object-storage-${GITHUB_REF_NAME}.zip" wordpress-object-storage
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            "build/wordpress-object-storage-${GITHUB_REF_NAME}.zip" \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes

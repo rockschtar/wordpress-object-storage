@@ -2,8 +2,8 @@
 
 namespace Rockschtar\WordPress\ObjectStorage\Models;
 
-class ObjectStorageItem {
-
+class ObjectStorageItem
+{
     private string $key;
 
     private mixed $value = null;
@@ -12,44 +12,53 @@ class ObjectStorageItem {
 
     private ?\DateTime $expiresAtDateTime = null;
 
-    public function __construct(string $key, mixed $value, ?int $expiresAtTimestamp = null) {
+    public function __construct(string $key, mixed $value, ?int $expiresAtTimestamp = null)
+    {
         $this->key = $key;
         $this->value = $value;
         $this->expiresAtTimestamp = $expiresAtTimestamp;
     }
 
-    public function getKey(): string {
+    public function getKey(): string
+    {
         return $this->key;
     }
 
-    public function setKey(string $key): ObjectStorageItem {
+    public function setKey(string $key): ObjectStorageItem
+    {
         $this->key = $key;
         return $this;
     }
 
-    public function getValue() : mixed {
+    public function getValue(): mixed
+    {
         return $this->value;
     }
 
-    public function setValue(mixed $value): ObjectStorageItem {
+    public function setValue(mixed $value): ObjectStorageItem
+    {
         $this->value = $value;
         return $this;
     }
 
-    public function getExpiresAtTimestamp(): ?int {
+    public function getExpiresAtTimestamp(): ?int
+    {
         return $this->expiresAtTimestamp;
     }
 
-    public function setExpiresAtTimestamp(?int $expiresAtTimestamp): ObjectStorageItem {
+    public function setExpiresAtTimestamp(?int $expiresAtTimestamp): ObjectStorageItem
+    {
         $this->expiresAtTimestamp = $expiresAtTimestamp;
         return $this;
     }
 
-    public function getExpiresAtDateTime(): ?\DateTime {
+    public function getExpiresAtDateTime(): ?\DateTime
+    {
         return $this->expiresAtDateTime;
     }
 
-    public function setExpiresAtDateTime(?\DateTime $expiresAtDateTime): ObjectStorageItem {
+    public function setExpiresAtDateTime(?\DateTime $expiresAtDateTime): ObjectStorageItem
+    {
         $this->expiresAtDateTime = $expiresAtDateTime;
         return $this;
     }

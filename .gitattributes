@@ -1,0 +1,9 @@
+# Exclude development files from dist archives (git archive, composer --prefer-dist).
+/.gitattributes        export-ignore
+/.github/              export-ignore
+/.gitignore            export-ignore
+/bin/                  export-ignore
+/.php-cs-fixer.dist.php export-ignore
+/phpunit.xml.dist      export-ignore
+/tests/                export-ignore
+/README.md             export-ignore

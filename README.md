@@ -40,6 +40,33 @@ $myKey = rsos_get_object('my-key');
 $myKey = rsos_delete_object('my-key');
 ```
 
+## Tests
+
+The integration tests run against the official WordPress test suite (PHPUnit + MySQL/MariaDB).
+`bin/install-wp-tests.sh` downloads WordPress core and the test framework (the latter via
+`svn export` from develop.svn.wordpress.org) and configures the test database connection:
+
+```
+bash bin/install-wp-tests.sh <db-name> <db-user> <db-pass> [db-host] [wp-version] [skip-database-creation]
+vendor/bin/phpunit
+```
+
+In the Lando environment of this repository:
+
+```
+# once per environment (database persists, test suite lives in the container's /tmp)
+lando install-wp-tests-rsos
+
+# run the tests
+lando phpunit-rsos
+```
+
+If the `wordpress_test` database does not exist yet:
+
+```
+lando ssh -s database -c "mysql -uroot -e \"CREATE DATABASE IF NOT EXISTS wordpress_test; GRANT ALL PRIVILEGES ON wordpress_test.* TO 'wordpress'@'%';\""
+```
+
 ## License
 rockschtar/wordpress-object-storage is open source and released under MIT
 license. See [LICENSE.md](LICENSE.md) file for more info.

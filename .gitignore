@@ -1,3 +1,5 @@
 .idea
 .vscode
 vendor
+.php-cs-fixer.cache
+composer.lock

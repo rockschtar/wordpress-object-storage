@@ -1,4 +1,5 @@
 <?php
+
 /**
  * WordPress Object Storage
  * @package     Rockschtar\WordPress\ObjectStorage
@@ -30,4 +31,3 @@ if (file_exists(RSOS_PLUGIN_DIR . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEP
 PluginController::init();
 
 require_once 'functions.php';
-
