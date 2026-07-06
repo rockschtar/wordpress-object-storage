@@ -3,8 +3,11 @@ name: CI
 on:
   push:
     branches: ['**']
-    # Releases are cut from plain semver tags (1.2.3, no v prefix).
-    tags: ['[0-9]+.[0-9]+.[0-9]+']
+    # Releases are cut from plain semver tags (1.2.3, no v prefix),
+    # including prereleases (1.2.3-alpha.1, 1.2.3-RC1, ...).
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
+      - '[0-9]+.[0-9]+.[0-9]+-*'
   pull_request:
 
 jobs:
@@ -97,7 +100,13 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          # Tags with a suffix (1.2.3-alpha.1) become GitHub prereleases.
+          PRERELEASE_FLAG=""
+          if [[ "$GITHUB_REF_NAME" == *-* ]]; then
+            PRERELEASE_FLAG="--prerelease"
+          fi
           gh release create "$GITHUB_REF_NAME" \
             "build/wordpress-object-storage-${GITHUB_REF_NAME}.zip" \
             --title "$GITHUB_REF_NAME" \
-            --generate-notes
+            --generate-notes \
+            $PRERELEASE_FLAG
