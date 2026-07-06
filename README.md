@@ -1,73 +1,98 @@
 # rockschtar/wordpress-object-storage
 
+[![CI](https://github.com/rockschtar/wordpress-object-storage/actions/workflows/ci.yml/badge.svg)](https://github.com/rockschtar/wordpress-object-storage/actions/workflows/ci.yml)
+[![Packagist Version](https://img.shields.io/packagist/v/rockschtar/wordpress-object-storage)](https://packagist.org/packages/rockschtar/wordpress-object-storage)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
+
 ## Description
 
-WordPress [Must Use Plugin](https://codex.wordpress.org/Must_Use_Plugins) that provides functions simliar to 
-[transients](https://developer.wordpress.org/apis/handbook/transients/) but without the general [behavior](https://core.trac.wordpress.org/ticket/20316#comment:47) of transients
-in WordPress. Stored data persist forever or until expiration time. You do not need to serialize values. If the value needs to be serialized, 
-then it will be serialized before it is set. Developed for usage  with composer based WordPress projects
-([roots/bedrock](https://github.com/roots/bedrock) or[johnpbloch/wordpress](https://github.com/johnpbloch/wordpress)).
+WordPress plugin that provides functions similar to
+[transients](https://developer.wordpress.org/apis/handbook/transients/) but without their general
+[behavior](https://core.trac.wordpress.org/ticket/20316#comment:47): transients may disappear at any
+time (for example when a persistent object cache evicts them), so code must never rely on them.
+Objects stored with this plugin persist until they expire or are deleted — nothing else removes them.
+
+- Data is stored in the `wp_options` table (never autoloaded), so it survives object cache evictions.
+- Optional expiration time per object; expired objects are cleaned up hourly by a WP-Cron job
+  (`rsos_delete_expired`) and lazily on read.
+- Values are serialized automatically when needed — store scalars, arrays or objects as they are.
 
 ## Requirements
 
-- PHP 7.1
-- [Composer](https://getcomposer.org/) to install
+- PHP >= 8.3
+- WordPress >= 6.8
 
 ## Install
+
+### Composer
+
+For composer based WordPress projects ([roots/bedrock](https://github.com/roots/bedrock) or
+[johnpbloch/wordpress](https://github.com/johnpbloch/wordpress)); the package is installed as a
+must-use plugin (`wordpress-muplugin`):
 
 ```
 composer require rockschtar/wordpress-object-storage
 ```
 
+### Manual
+
+Download `wordpress-object-storage-<version>.zip` from the
+[latest release](https://github.com/rockschtar/wordpress-object-storage/releases/latest) and install
+it like any other plugin (the zip ships with its own autoloader).
+
 ## Usage
 
-### Set Object
+### Set object
+
 ```php
-//without expiration time
+// without expiration time: stored until deleted
 rsos_set_object('my-key', 'my-value');
 
-//with expiration time
-rsos_set_object('my-key', 'my-value', 60 * 60 * 24);
+// with expiration time in seconds
+rsos_set_object('my-key', 'my-value', DAY_IN_SECONDS);
 ```
 
-### Get Object
+An expiration of `0` (default) means the object never expires. A negative expiration deletes the
+object.
+
+### Get object
+
 ```php
-$myKey = rsos_get_object('my-key');
+$value = rsos_get_object('my-key');
 ```
 
-### Delete Object
+Returns `false` if the object does not exist or is expired. Like `get_option()`, a stored value of
+`false` is indistinguishable from a missing object.
+
+### Delete object
+
 ```php
-$myKey = rsos_delete_object('my-key');
+rsos_delete_object('my-key');
 ```
 
-## Tests
+### ObjectStorage class
 
-The integration tests run against the official WordPress test suite (PHPUnit + MySQL/MariaDB).
-`bin/install-wp-tests.sh` downloads WordPress core and the test framework (the latter via
-`svn export` from develop.svn.wordpress.org) and configures the test database connection:
+The `rsos_*` functions are thin wrappers around the `ObjectStorage` class, which offers a few more
+methods:
 
-```
-bash bin/install-wp-tests.sh <db-name> <db-user> <db-pass> [db-host] [wp-version] [skip-database-creation]
-vendor/bin/phpunit
-```
+```php
+use Rockschtar\WordPress\ObjectStorage\ObjectStorage;
 
-In the Lando environment of this repository:
+$storage = new ObjectStorage();
 
-```
-# once per environment (database persists, test suite lives in the container's /tmp)
-lando install-wp-tests-rsos
+$storage->set('my-key', ['foo' => 'bar'], HOUR_IN_SECONDS);
+$storage->get('my-key');                // false|mixed
+$storage->delete('my-key');             // bool
 
-# run the tests
-lando phpunit-rsos
-```
+$storage->expires('my-key');            // expiration as unix timestamp, null if none
+$storage->expiresAsDateTime('my-key');  // expiration as DateTime (site timezone), null if none
+$storage->getItem('my-key');            // ObjectStorageItem with key, value and expiration
 
-If the `wordpress_test` database does not exist yet:
-
-```
-lando ssh -s database -c "mysql -uroot -e \"CREATE DATABASE IF NOT EXISTS wordpress_test; GRANT ALL PRIVILEGES ON wordpress_test.* TO 'wordpress'@'%';\""
+$storage->deleteExpired();              // delete all expired objects (what the cron job runs)
+$storage->clear();                      // delete ALL stored objects, expired or not
 ```
 
 ## License
-rockschtar/wordpress-object-storage is open source and released under MIT
-license. See [LICENSE.md](LICENSE.md) file for more info.
 
+rockschtar/wordpress-object-storage is open source and released under MIT license.
+See [LICENSE.md](LICENSE.md) file for more info.
