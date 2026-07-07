@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 $finder = (new PhpCsFixer\Finder())
     ->in(__DIR__ . '/src')
     ->in(__DIR__ . '/tests')
@@ -10,7 +12,9 @@ $finder = (new PhpCsFixer\Finder())
     ]);
 
 return (new PhpCsFixer\Config())
+    ->setRiskyAllowed(true)
     ->setRules([
         '@PER-CS3.0' => true,
+        'declare_strict_types' => true,
     ])
     ->setFinder($finder);

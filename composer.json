@@ -3,7 +3,7 @@
     "description": "Transients in green",
     "type": "wordpress-muplugin",
     "require": {
-        "php": ">=8.3"
+        "php": ">=8.4"
     },
     "license": "MIT",
     "authors": [

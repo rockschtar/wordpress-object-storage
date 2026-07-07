@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * WordPress Object Storage
  * @package     Rockschtar\WordPress\ObjectStorage
@@ -11,7 +13,7 @@
  * Plugin URI:   https://eracer.de
  * Description:  Transients in green
  * Version:      develop
- * Requires PHP: 8.3
+ * Requires PHP: 8.4
  * Requires at least: 6.8
  * Author: Stefan Helmer
  * Author URI: https://eracer.de

@@ -19,7 +19,7 @@ Objects stored with this plugin persist until they expire or are deleted — not
 
 ## Requirements
 
-- PHP >= 8.3
+- PHP >= 8.4
 - WordPress >= 6.8
 
 ## Install
