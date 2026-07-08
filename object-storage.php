@@ -12,7 +12,7 @@ declare(strict_types=1);
  * Plugin Name:  WordPress Object Storage
  * Plugin URI:   https://eracer.de
  * Description:  Transients in green
- * Version:      0.1.7
+ * Version:      develop
  * Requires PHP: 8.4
  * Requires at least: 6.8
  * Author: Stefan Helmer
