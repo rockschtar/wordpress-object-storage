@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/rockschtar/wordpress-object-storage/actions/workflows/ci.yml/badge.svg)](https://github.com/rockschtar/wordpress-object-storage/actions/workflows/ci.yml)
 [![Packagist Version](https://img.shields.io/packagist/v/rockschtar/wordpress-object-storage)](https://packagist.org/packages/rockschtar/wordpress-object-storage)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
+[![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue.svg)](LICENSE)
 
 ## Description
 
@@ -94,5 +94,5 @@ $storage->clear();                      // delete ALL stored objects, expired or
 
 ## License
 
-rockschtar/wordpress-object-storage is open source and released under MIT license.
-See [LICENSE.md](LICENSE.md) file for more info.
+rockschtar/wordpress-object-storage is open source and released under the GPL-3.0-or-later license.
+See [LICENSE](LICENSE) file for more info.

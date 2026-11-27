@@ -18,11 +18,12 @@ function rsos_set_object(string $key, mixed $value, int $expiration = 0): bool
 
 /**
  * @param string $key
+ * @return bool
  */
-function rsos_delete_object(string $key): void
+function rsos_delete_object(string $key): bool
 {
     $objectStorage = new ObjectStorage();
-    $objectStorage->delete($key);
+    return $objectStorage->delete($key);
 }
 
 /**

@@ -17,7 +17,8 @@ class FunctionsTest extends WP_UnitTestCase
         $this->assertTrue(rsos_set_object($key, 'wrapped'));
         $this->assertSame('wrapped', rsos_get_object($key));
 
-        rsos_delete_object($key);
+        $this->assertTrue(rsos_delete_object($key));
+        $this->assertFalse(rsos_delete_object($key));
         $this->assertFalse(rsos_get_object($key));
     }
 

@@ -6,6 +6,7 @@ namespace Rockschtar\WordPress\ObjectStorage;
 
 use DateTime;
 use Rockschtar\WordPress\ObjectStorage\Models\ObjectStorageItem;
+use stdClass;
 
 class ObjectStorage
 {
@@ -16,7 +17,7 @@ class ObjectStorage
     {
         $expirationTimestamp = get_option($this->getExpirationKey($key));
 
-        if ($expirationTimestamp && $expirationTimestamp < time()) {
+        if ($expirationTimestamp !== false && (int) $expirationTimestamp < time()) {
             $this->delete($key);
             return false;
         }
@@ -28,7 +29,11 @@ class ObjectStorage
     {
         $value = $this->get($key);
         $expirationTimestamp = $this->expires($key);
-        return new ObjectStorageItem($key, $value, $expirationTimestamp);
+        $expirationDateTime = $expirationTimestamp !== null
+            ? $this->timestampToDateTime($expirationTimestamp)
+            : null;
+
+        return new ObjectStorageItem($key, $value, $expirationTimestamp, $expirationDateTime);
     }
 
     /**
@@ -39,45 +44,58 @@ class ObjectStorage
      */
     public function set(string $key, mixed $value, int $expiration = 0): bool
     {
-        $result = update_option($this->getKey($key), $value, false);
+        if ($expiration < 0) {
+            return $this->delete($key);
+        }
+
+        $optionKey = $this->getKey($key);
+        $valueUpdated = update_option($optionKey, $value, false);
+
+        if (!$valueUpdated) {
+            $missing = new stdClass();
+            if (get_option($optionKey, $missing) === $missing) {
+                return false;
+            }
+        }
 
         if ($expiration > 0) {
             $timestampExpiration = time() + $expiration;
-            update_option($this->getExpirationKey($key), $timestampExpiration, false);
+            $expirationUpdated = update_option($this->getExpirationKey($key), $timestampExpiration, false);
+
+            return $valueUpdated || $expirationUpdated;
         }
 
-        if ($expiration === 0) {
-            delete_option($this->getExpirationKey($key));
-        }
+        $expirationDeleted = delete_option($this->getExpirationKey($key));
 
-        if ($expiration < 0) {
-            $this->delete($key);
-        }
-
-        return $result;
+        return $valueUpdated || $expirationDeleted;
     }
 
-    public function delete($key): bool
+    public function delete(string $key): bool
     {
-        if (delete_option($this->getKey($key)) === true) {
-            return  delete_option($this->getExpirationKey($key));
-        }
+        $deletedValue = delete_option($this->getKey($key));
+        $deletedExpiration = delete_option($this->getExpirationKey($key));
 
-        return false;
+        return $deletedValue || $deletedExpiration;
     }
 
-    public function expires($key): ?int
+    public function expires(string $key): ?int
     {
         $value = get_option($this->getExpirationKey($key));
 
-        if (!$value) {
+        if ($value === false || $value === '') {
             return null;
         }
 
-        return (int) $value;
+        $timestamp = (int) $value;
+
+        if ($timestamp < time()) {
+            return null;
+        }
+
+        return $timestamp;
     }
 
-    public function expiresAsDateTime($key): ?DateTime
+    public function expiresAsDateTime(string $key): ?DateTime
     {
         $timestamp = $this->expires($key);
 
@@ -85,8 +103,7 @@ class ObjectStorage
             return null;
         }
 
-        // Wrap DateTime instantiation in parentheses to avoid parser errors on some PHP versions
-        return (new DateTime())->setTimezone(wp_timezone())->setTimestamp($timestamp);
+        return $this->timestampToDateTime($timestamp);
     }
 
     /**
@@ -119,7 +136,7 @@ class ObjectStorage
 
         $timeoutOptionNames = $wpdb->get_col(
             $wpdb->prepare(
-                "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s AND option_value < %d",
+                "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s AND option_value REGEXP '^[0-9]+$' AND CAST(option_value AS UNSIGNED) < %d",
                 $wpdb->esc_like('_rsos_timeout_') . '%',
                 time(),
             ),
@@ -130,6 +147,11 @@ class ObjectStorage
             delete_option($this->getKey($key));
             delete_option($this->getExpirationKey($key));
         }
+    }
+
+    private function timestampToDateTime(int $timestamp): DateTime
+    {
+        return (new DateTime())->setTimezone(wp_timezone())->setTimestamp($timestamp);
     }
 
     private function getExpirationKey(string $key): string

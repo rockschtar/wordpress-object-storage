@@ -47,6 +47,27 @@ class ObjectStorageTest extends WP_UnitTestCase
         $this->assertNull($storage->expires($key));
     }
 
+    public function test_delete_returns_true_for_object_without_expiration()
+    {
+        $storage = new ObjectStorage();
+        $key = 'unit_' . uniqid('', true);
+
+        $this->assertTrue($storage->set($key, 'permanent'));
+        $this->assertTrue($storage->delete($key));
+        $this->assertFalse($storage->get($key));
+    }
+
+    public function test_delete_cleans_up_orphaned_expiration_option()
+    {
+        $storage = new ObjectStorage();
+        $key = 'unit_' . uniqid('', true);
+
+        update_option('_rsos_timeout_' . $key, time() + 60, false);
+
+        $this->assertTrue($storage->delete($key));
+        $this->assertFalse(get_option('_rsos_timeout_' . $key));
+    }
+
     public function test_get_returns_false_and_cleans_up_when_expired()
     {
         $storage = new ObjectStorage();
@@ -75,10 +96,23 @@ class ObjectStorageTest extends WP_UnitTestCase
         $this->assertTrue($storage->set($key, 'short-lived', 60));
         $this->assertSame('short-lived', $storage->get($key));
 
-        $storage->set($key, 'short-lived', -1);
+        $this->assertTrue($storage->set($key, 'short-lived', -1));
 
         $this->assertFalse($storage->get($key));
         $this->assertNull($storage->expires($key));
+        $this->assertFalse($storage->set($key, 'short-lived', -1));
+    }
+
+    public function test_set_returns_true_when_refreshing_expiration_for_unchanged_value()
+    {
+        $storage = new ObjectStorage();
+        $key = 'unit_' . uniqid('', true);
+
+        $this->assertTrue($storage->set($key, 'same-value', 60));
+        $firstExpires = $storage->expires($key);
+
+        $this->assertTrue($storage->set($key, 'same-value', 3600));
+        $this->assertGreaterThan($firstExpires, $storage->expires($key));
     }
 
     public function test_reset_without_expiration_makes_object_permanent()
@@ -130,6 +164,18 @@ class ObjectStorageTest extends WP_UnitTestCase
         $this->assertNull($storage->expiresAsDateTime($key));
     }
 
+    public function test_expires_returns_null_when_already_expired()
+    {
+        $storage = new ObjectStorage();
+        $key = 'unit_' . uniqid('', true);
+
+        $this->assertTrue($storage->set($key, 'value', 60));
+        update_option('_rsos_timeout_' . $key, time() - 10, false);
+
+        $this->assertNull($storage->expires($key));
+        $this->assertNull($storage->expiresAsDateTime($key));
+    }
+
     public function test_get_item()
     {
         $storage = new ObjectStorage();
@@ -143,6 +189,21 @@ class ObjectStorageTest extends WP_UnitTestCase
         $this->assertSame($key, $item->getKey());
         $this->assertSame($value, $item->getValue());
         $this->assertSame($storage->expires($key), $item->getExpiresAtTimestamp());
+        $this->assertInstanceOf(DateTime::class, $item->getExpiresAtDateTime());
+        $this->assertSame($storage->expires($key), $item->getExpiresAtDateTime()->getTimestamp());
+    }
+
+    public function test_get_item_without_expiration()
+    {
+        $storage = new ObjectStorage();
+        $key = 'unit_' . uniqid('', true);
+
+        $this->assertTrue($storage->set($key, 'permanent'));
+
+        $item = $storage->getItem($key);
+        $this->assertSame('permanent', $item->getValue());
+        $this->assertNull($item->getExpiresAtTimestamp());
+        $this->assertNull($item->getExpiresAtDateTime());
     }
 
     public function test_delete_returns_false_for_unknown_key()

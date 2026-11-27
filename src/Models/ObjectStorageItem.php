@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Rockschtar\WordPress\ObjectStorage\Models;
 
+use DateTime;
+
 class ObjectStorageItem
 {
     private string $key;
@@ -12,13 +14,18 @@ class ObjectStorageItem
 
     private ?int $expiresAtTimestamp = null;
 
-    private ?\DateTime $expiresAtDateTime = null;
+    private ?DateTime $expiresAtDateTime = null;
 
-    public function __construct(string $key, mixed $value, ?int $expiresAtTimestamp = null)
-    {
+    public function __construct(
+        string $key,
+        mixed $value,
+        ?int $expiresAtTimestamp = null,
+        ?DateTime $expiresAtDateTime = null,
+    ) {
         $this->key = $key;
         $this->value = $value;
         $this->expiresAtTimestamp = $expiresAtTimestamp;
+        $this->expiresAtDateTime = $expiresAtDateTime;
     }
 
     public function getKey(): string
@@ -54,15 +61,14 @@ class ObjectStorageItem
         return $this;
     }
 
-    public function getExpiresAtDateTime(): ?\DateTime
+    public function getExpiresAtDateTime(): ?DateTime
     {
         return $this->expiresAtDateTime;
     }
 
-    public function setExpiresAtDateTime(?\DateTime $expiresAtDateTime): ObjectStorageItem
+    public function setExpiresAtDateTime(?DateTime $expiresAtDateTime): ObjectStorageItem
     {
         $this->expiresAtDateTime = $expiresAtDateTime;
         return $this;
     }
-
 }

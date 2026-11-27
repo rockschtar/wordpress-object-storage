@@ -24,6 +24,12 @@ class PluginControllerTest extends WP_UnitTestCase
         $this->assertNotFalse(has_action('rsos_delete_expired'));
     }
 
+    public function test_unprotected_admin_actions_are_not_registered()
+    {
+        $this->assertFalse(has_action('admin_action_rsos_reschedule_cron'));
+        $this->assertFalse(has_action('admin_action_rsos_delete_expired'));
+    }
+
     public function test_cron_hook_deletes_expired_objects()
     {
         $storage = new ObjectStorage();

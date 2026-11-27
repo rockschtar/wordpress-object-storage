@@ -21,7 +21,7 @@ WP_CORE_DIR=${WP_CORE_DIR-$TMPDIR/wordpress}
 
 download() {
 	if command -v curl > /dev/null; then
-		curl -s "$1" > "$2"
+		curl -sL "$1" > "$2"
 	elif command -v wget > /dev/null; then
 		wget -nv -O "$2" "$1"
 	else
@@ -53,7 +53,7 @@ elif [[ $WP_VERSION == 'nightly' || $WP_VERSION == 'trunk' ]]; then
 	WP_TESTS_TAG="trunk"
 else
 	# 'latest': resolve the current stable version via the wordpress.org API.
-	download http://api.wordpress.org/core/version-check/1.7/ "$TMPDIR"/wp-latest.json
+	download https://api.wordpress.org/core/version-check/1.7/ "$TMPDIR"/wp-latest.json
 	LATEST_VERSION=$(grep -o '"version":"[^"]*' "$TMPDIR"/wp-latest.json | head -1 | sed 's/"version":"//')
 	if [[ -z "$LATEST_VERSION" ]]; then
 		echo "Latest WordPress version could not be found"

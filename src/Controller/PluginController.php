@@ -13,25 +13,17 @@ class PluginController
         register_deactivation_hook(RSOS_PLUGIN_FILE, $this->unregisterCron(...));
         add_action('init', $this->registerCron(...));
         add_action('rsos_delete_expired', $this->deleteExpired(...));
-        add_action('admin_action_rsos_reschedule_cron', $this->rescheduleCron(...));
-        add_action('admin_action_rsos_delete_expired', $this->deleteExpired(...));
     }
 
-    public static function &init(): PluginController
+    public static function init(): PluginController
     {
-        static $instance = false;
+        static $instance = null;
 
-        if (!$instance) {
+        if ($instance === null) {
             $instance = new self();
         }
 
         return $instance;
-    }
-
-    private function rescheduleCron(): void
-    {
-        $this->unregisterCron();
-        $this->registerCron();
     }
 
     private function registerCron(): void
@@ -50,6 +42,4 @@ class PluginController
     {
         (new ObjectStorage())->deleteExpired();
     }
-
-
 }
