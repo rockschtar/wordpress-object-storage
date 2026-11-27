@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Releases a new plugin version: stamps the version from the argument into the
-# plugin header, commits, tags, resets the header back to "develop" and pushes
-# branch + tag in one go. The tag push triggers the release job in ci.yml.
+# plugin header, commits, tags and pushes branch + tag in one go. The tag push
+# triggers the release job in ci.yml.
 set -euo pipefail
 
 VERSION="${1:?Usage: bin/release.sh <version>  (e.g. 0.1.7)}"
@@ -25,9 +25,6 @@ git fetch origin
 sed -i "s/^ \* Version:.*/ * Version:      $VERSION/" object-storage.php
 git commit -am "Release $VERSION"
 git tag "$VERSION"
-
-sed -i "s/^ \* Version:.*/ * Version:      develop/" object-storage.php
-git commit -am "Back to develop"
 
 git push origin master "$VERSION"
 
